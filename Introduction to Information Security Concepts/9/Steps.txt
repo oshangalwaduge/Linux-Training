@@ -1,0 +1,9 @@
+Download the word list.
+Create the MD5 hash for each word
+for i in $(cat phpbb.txt); do echo -n "${i}" | md5sum | tr -d " -" >> hashes; done
+
+Then start cracking the password
+hashcat -m 0 hashes phpbb.txt
+
+grep the hascat.potfile where the matched strings are saved.
+grep "3c2223212b6dde34bcf86b580bdb71d4" /root/.hashcat/hashcat.potfile
