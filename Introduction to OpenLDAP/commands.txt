@@ -1,0 +1,16 @@
+Create rootdn
+$ ldapadd -D "cn=admin,dc=ltacademy,dc=com" -h 127.0.0.1  -W -x -f ldifs/root.ldif
+
+Create organizational units
+$ ldapadd -D "cn=admin,dc=ltacademy,dc=com" -h 127.0.0.1  -W -x -f ldifs/ou.ldif
+
+create replicationuser
+$ ldapadd -D "cn=admin,dc=ltacademy,dc=com" -h 127.0.0.1  -W -x -f ldifs/replicationuser.ldif
+
+Use Scripts/gen_employees_ldif.sh to create the employees.ldif
+Add employees
+$ ldapadd -D "cn=admin,dc=ltacademy,dc=com" -h 127.0.0.1  -W -x -f Scripts/employees.ldif
+
+Use Scripts/gen_books_ldif.sh to create the books ldifs
+Add books entries
+$ ldapadd -D "cn=admin,dc=ltacademy,dc=com" -h 127.0.0.1  -W -x -f Scripts/books.ldif

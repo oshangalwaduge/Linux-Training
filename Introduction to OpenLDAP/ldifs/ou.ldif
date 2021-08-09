@@ -1,0 +1,14 @@
+dn: ou=employees,dc=ltacademy,dc=com
+objectclass: organizationalunit
+ou: employees
+description: Employees
+
+dn: ou=books,dc=ltacademy,dc=com
+objectclass: organizationalunit
+ou: books
+description: Books
+
+dn: ou=System,dc=ltacademy,dc=com
+objectclass: organizationalunit
+ou: System
+description: System

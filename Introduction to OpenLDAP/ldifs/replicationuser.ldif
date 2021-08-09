@@ -1,0 +1,7 @@
+dn: uid=replicationuser,ou=System,dc=ltacademy,dc=com
+objectClass: simpleSecurityObject
+objectClass: account
+ou: System
+uid: replicationuser
+userPassword: {SSHA}pRtwsxdISl4Oct6P/37vr9bB9w/DwCmA
+description: SyncRepl User
