@@ -1,0 +1,34 @@
+dn: ou=staff,dc=ltacademy,dc=com
+objectclass: organizationalunit
+ou: staff
+description: Staff
+
+dn: ou=groups,ou=staff,dc=ltacademy,dc=com
+objectclass: organizationalunit
+ou: groups
+description: Groups
+
+dn: uid=owenh,ou=staff,dc=ltacademy,dc=com
+objectClass: inetOrgPerson
+objectClass: top
+cn: Owen Hudson
+sn: Hudson
+mail: owen.hudson@lt.com
+mobile: 94771111111
+userPassword: {SSHA}uEO7C6cJQ5X8BunWHZRWrLbmnrMTR8KH
+
+dn: uid=oshang,ou=staff,dc=ltacademy,dc=com
+objectClass: inetOrgPerson
+objectClass: top
+cn: Oshan Galwaduge
+sn: Oshan
+mail: oshang@lt.com
+mobile: 94771111122
+userPassword: {SHA}c4PrSNwURRivDvZ9ATDN3SIUKn4=
+
+dn: cn=employees,ou=groups,ou=staff,dc=ltacademy,dc=com
+objectclass: groupOfNames
+objectclass: top
+cn: employees
+member: uid=owenh,ou=staff,dc=ltacademy,dc=com
+member: uid=oshang,ou=staff,dc=ltacademy,dc=com
