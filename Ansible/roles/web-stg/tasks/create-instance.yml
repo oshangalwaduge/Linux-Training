@@ -1,0 +1,96 @@
+- name: create a disk
+  gcp_compute_disk:
+      name: "{{ diskname }}"
+      size_gb: 30
+      source_image: 'projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20210908'
+      zone: "{{ zone }}"
+      project: "{{ gcp_project }}"
+      auth_kind: "{{ gcp_cred_kind }}"
+      service_account_file: "{{ gcp_cred_file }}"
+      scopes:
+        - https://www.googleapis.com/auth/compute
+      state: present
+  register: disk
+
+- name: show disk
+  debug:
+      msg: "{{ disk }}"
+
+- name: attach to a network
+  gcp_compute_network_info:
+      filters:
+          - name = "default"
+      project: "{{ gcp_project }}"
+      auth_kind: "{{ gcp_cred_kind }}"
+      service_account_file: "{{ gcp_cred_file }}"
+  register: network
+
+- name: show network
+  debug:
+      msg: "{{ network }}"
+
+- name: create an address
+  gcp_compute_address:
+      name: "{{ addressname }}"
+      region: 'us-central1'
+      project: "{{ gcp_project }}"
+      auth_kind: "{{ gcp_cred_kind }}"
+      service_account_file: "{{ gcp_cred_file }}"
+      scopes:
+        - https://www.googleapis.com/auth/compute
+      state: present
+  register: address
+
+- name: show address
+  debug:
+      msg: "{{ address }}"
+
+- name: create an instance
+  gcp_compute_instance:
+      name: "{{ hostname }}"
+      machine_type: e2-micro
+      disks:
+          - auto_delete: true
+            boot: true
+            source: "{{ disk }}"
+      metadata:
+          fingerprint: "ftRIiuIg3OU="
+      network_interfaces:
+            - network: "{{ network }}"
+              access_configs:
+                - name: 'External NAT'
+                  nat_ip: "{{ address }}"
+                  type: 'ONE_TO_ONE_NAT'
+      tags:
+          items:
+              - "http-server"
+      zone: "{{ zone }}"
+      project: "{{ gcp_project }}"
+      auth_kind: "{{ gcp_cred_kind }}"
+      service_account_file: "{{ gcp_cred_file }}"
+      scopes:
+          - https://www.googleapis.com/auth/compute
+      state: present
+  register: instance
+
+- name: show instanece
+  debug:
+      msg: "{{ instance }}"
+
+- name: add IP to the inventory
+  shell: |
+    if [ ! $(grep webservers inventory) ]; then echo "[webservers]"  >> inventory; fi
+    echo "{{ hostname }}  ansible_host={{ instance.networkInterfaces[0].accessConfigs[0].natIP }}" >> inventory;
+    cat inventory;
+  register: inv
+
+- name: show inv
+  debug:
+      msg: "{{ inv }}"
+
+- name: Wait to Completely Provision Instances
+  pause:
+    minutes: 1
+
+- name: refresh inventory
+  meta: refresh_inventory

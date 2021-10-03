@@ -1,0 +1,46 @@
+- name: Install apache httpd
+  apt:
+    name: apache2=2.4.41-4ubuntu3.6
+    update_cache: yes
+  delegate_to: "{{ target_server }}"
+
+- name: allow ssh
+  ufw:
+    rule: limit
+    port: ssh
+    proto: tcp
+  delegate_to: "{{ target_server }}"
+
+- name: allow all access to tcp port 80
+  ufw:
+    rule: allow
+    port: http
+    proto: tcp
+  delegate_to: "{{ target_server }}"
+
+- name: enable UFW
+  ufw:
+    state: enabled
+  delegate_to: "{{ target_server }}"
+
+- name: get hostname
+  shell: "hostname"
+  register: hostname
+  delegate_to: "{{ target_server }}"
+
+- name: setup web page
+  copy:
+    dest: /var/www/html/index.html
+    content: |
+      <html>
+        <head>
+          <title>Hello {{ hostname }}</title>
+        </head>
+        <body>
+          <center>
+            <h1>Hello {{ hostname }}</h1>
+          </center>
+        </body>
+      </html>
+  delegate_to: "{{ target_server }}"
+

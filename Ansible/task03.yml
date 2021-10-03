@@ -1,0 +1,25 @@
+- name: Setup Web Server
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+      gcp_project: wso2-linux-training-oshan
+      gcp_cred_kind: serviceaccount
+      gcp_cred_file: "./wso2-linux-training-oshan-4b3d8389ebf2"
+      zone: "us-central1-a"
+      region: "us-central1"
+  
+  tasks:
+
+  - name: "Run Role: web-stg"
+    include_role:
+      name: web-stg
+    loop:
+      - webserver1
+      - webserver2
+      #  loop_var: server_name
+    vars:
+      hostname: "{{ item|lower }}"
+      diskname: "{{ hostname }}-disk"
+      addressname: "{{ hostname }}-address"
+      target_server: "{{ hostname }}"

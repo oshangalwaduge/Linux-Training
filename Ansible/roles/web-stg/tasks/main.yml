@@ -1,0 +1,8 @@
+- name: Create GCP Instance
+  include_tasks: create-instance.yml
+
+- name: Setup WebServer
+  include_tasks: setup-webserver.yml
+
+- name: Update hostname
+  include_tasks: update-hostname.yml

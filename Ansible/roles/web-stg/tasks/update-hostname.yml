@@ -1,0 +1,7 @@
+- name: Update Hostname
+  shell: chmod 755 roles/web-stg/files/task02.sh; ./roles/web-stg/files/task02.sh {{ hostname }};
+  register: new_hostname
+
+- name: Show Hostname Result
+  debug:
+    var: new_hostname

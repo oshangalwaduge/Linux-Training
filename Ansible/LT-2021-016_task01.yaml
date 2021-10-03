@@ -1,0 +1,167 @@
+---
+- name: Create an instance
+  hosts: localhost
+  gather_facts: no
+  connection: local
+  vars:
+      gcp_project: wso2-linux-training-oshan
+      gcp_cred_kind: serviceaccount
+      gcp_cred_file: "./wso2-linux-training-oshan-4b3d8389ebf2"
+      zone: "us-central1-a"
+      region: "us-central1"
+      hostname: "{{ server_name|lower }}"
+      diskname: "{{ hostname }}-disk"
+      addressname: "{{ hostname }}-address"
+
+  tasks:
+
+  - name: create a disk
+    gcp_compute_disk:
+        name: "{{ diskname }}"
+        size_gb: 30
+        source_image: 'projects/ubuntu-os-cloud/global/images/ubuntu-2004-focal-v20210908'
+        zone: "{{ zone }}"
+        project: "{{ gcp_project }}"
+        auth_kind: "{{ gcp_cred_kind }}"
+        service_account_file: "{{ gcp_cred_file }}"
+        scopes:
+          - https://www.googleapis.com/auth/compute
+        state: present
+    register: disk
+
+  - name: show disk
+    debug:
+        msg: "{{ disk }}"
+
+  - name: attach to a network
+    gcp_compute_network_info:
+        filters:
+            - name = "default"
+        project: "{{ gcp_project }}"
+        auth_kind: "{{ gcp_cred_kind }}"
+        service_account_file: "{{ gcp_cred_file }}"
+    register: network
+
+  - name: show network
+    debug:
+        msg: "{{ network }}"
+
+  - name: create an address
+    gcp_compute_address:
+        name: "{{ addressname }}"
+        region: 'us-central1'
+        project: "{{ gcp_project }}"
+        auth_kind: "{{ gcp_cred_kind }}"
+        service_account_file: "{{ gcp_cred_file }}"
+        scopes:
+          - https://www.googleapis.com/auth/compute
+        state: present
+    register: address
+
+  - name: show address
+    debug:
+        msg: "{{ address }}"
+
+  - name: create an instance
+    gcp_compute_instance:
+        name: "{{ hostname }}"
+        machine_type: e2-micro
+        disks:
+            - auto_delete: true
+              boot: true
+              source: "{{ disk }}"
+        metadata:
+            fingerprint: "ftRIiuIg3OU="
+        network_interfaces:
+              - network: "{{ network }}"
+                access_configs:
+                  - name: 'External NAT'
+                    nat_ip: "{{ address }}"
+                    type: 'ONE_TO_ONE_NAT'
+        tags:
+            items:
+                - "http-server"
+        zone: "{{ zone }}"
+        project: "{{ gcp_project }}"
+        auth_kind: "{{ gcp_cred_kind }}"
+        service_account_file: "{{ gcp_cred_file }}"
+        scopes:
+            - https://www.googleapis.com/auth/compute
+        state: present
+    register: instance
+
+  - name: show instanece
+    debug:
+        msg: "{{ instance }}"
+
+  - name: add IP to the inventory
+    shell: |
+      if [ ! $(grep webservers inventory) ]; then echo "[webservers]"  >> inventory; fi
+      echo "{{ hostname }}  ansible_host={{ instance.networkInterfaces[0].accessConfigs[0].natIP }}" >> inventory;
+      cat inventory;
+    register: inv
+
+  - name: show inv
+    debug:
+        msg: "{{ inv }}"
+
+  - name: Wait to Completely Provision Instances
+    pause:
+      minutes: 1
+
+  - name: refresh inventory
+    meta: refresh_inventory
+
+- name: setup server
+  hosts: "{{ target_server }}"
+  vars:
+    target_server: "{{ server_name|lower }}"
+
+  tasks:
+
+  - name: Install apache httpd
+    apt:
+      name: apache2=2.4.41-4ubuntu3.6
+      update_cache: yes
+    delegate_to: "{{ target_server }}"
+
+  - name: allow ssh
+    ufw:
+      rule: limit
+      port: ssh
+      proto: tcp
+    delegate_to: "{{ target_server }}"
+
+  - name: allow all access to tcp port 80
+    ufw:
+      rule: allow
+      port: http
+      proto: tcp
+    delegate_to: "{{ target_server }}"
+
+  - name: enable UFW
+    ufw:
+      state: enabled
+    delegate_to: "{{ target_server }}"
+
+  - name: get hostname
+    shell: "hostname"
+    register: hostname
+    delegate_to: "{{ target_server }}"
+
+  - name: setup web page
+    copy:
+      dest: /var/www/html/index.html
+      content: |
+        <html>
+          <head>
+            <title>Hello {{ hostname.stdout }}</title>
+          </head>
+          <body>
+            <center>
+              <h1>Hello {{ hostname.stdout }}</h1>
+            </center>
+          </body>
+        </html>
+    delegate_to: "{{ target_server }}"
+
